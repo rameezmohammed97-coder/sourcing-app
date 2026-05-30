@@ -1,0 +1,29 @@
+async function generateResult() {
+    const input = document.getElementById('partInput').value.toLowerCase();
+    const resultsDiv = document.getElementById('resultsTable');
+    
+    // 1. Detect Category automatically
+    let detectedType = "";
+    if (input.includes("filter")) detectedType = "Filters";
+    if (input.includes("motor")) detectedType = "Motors";
+    if (input.includes("contactor")) detectedType = "Electrical";
+
+    resultsDiv.innerHTML = `⏳ Verifying ${detectedType || 'General'} Suppliers...`;
+
+    // 2. Fetch only the relevant suppliers from your secret URL
+    const API_URL = `YOUR_SCRIPT_URL?type=${detectedType}`;
+    const response = await fetch(API_URL);
+    const vendors = await response.json();
+
+    // 3. Display results in your "Separate Window"
+    if (vendors.length === 0) {
+        resultsDiv.innerHTML = "❌ No verified suppliers found for this category.";
+    } else {
+        let html = "<table><tr><th>Supplier</th><th>Credibility</th></tr>";
+        vendors.forEach(v => {
+            html += `<tr><td><b>${v.name}</b></td><td>${v.credibility}</td></tr>`;
+        });
+        resultsDiv.innerHTML = html + "</table>";
+    }
+    document.getElementById('resultOverlay').style.display = 'block';
+}
