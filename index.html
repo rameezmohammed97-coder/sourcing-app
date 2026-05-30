@@ -1,29 +1,95 @@
-async function generateResult() {
-    const input = document.getElementById('partInput').value.toLowerCase();
-    const resultsDiv = document.getElementById('resultsTable');
-    
-    // 1. Detect Category automatically
-    let detectedType = "";
-    if (input.includes("filter")) detectedType = "Filters";
-    if (input.includes("motor")) detectedType = "Motors";
-    if (input.includes("contactor")) detectedType = "Electrical";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HIA Procurement Desk</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        #app { display: none; background: white; color: black; padding: 35px; border-radius: 15px; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .login-box { text-align: center; background: #2d2d2d; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 90%; max-width: 400px; }
+        input, textarea { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; font-size: 14px; }
+        input { background: #3d3d3d; color: white; border: 1px solid #555; }
+        button { width: 100%; padding: 14px; background: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; margin-top: 10px; }
+        button:hover { background: #0056b3; }
+        
+        /* Separate Window Pop-up Style */
+        #resultOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; }
+        .popup-content { background: white; color: black; margin: 10% auto; width: 85%; max-width: 600px; border-radius: 15px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); position: relative; }
+        .close-btn { background: #dc3545; color: white; padding: 8px 15px; text-align: center; border-radius: 5px; cursor: pointer; float: right; font-weight: bold; font-size: 12px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #dee2e6; padding: 12px; text-align: left; }
+        th { background: #343a40; color: white; }
+    </style>
+</head>
+<body>
 
-    resultsDiv.innerHTML = `⏳ Verifying ${detectedType || 'General'} Suppliers...`;
+<div id="loginLayer" class="login-box">
+    <h3 style="margin-top:0; color:#007bff;">HIA SECURE ACCESS</h3>
+    <p style="color:#aaa; font-size:14px;">Enter your control key to access the desk.</p>
+    <input type="password" id="passkey" placeholder="Enter Security Key">
+    <button onclick="validate()">UNLOCK DESK</button>
+</div>
 
-    // 2. Fetch only the relevant suppliers from your secret URL
-    const API_URL = `YOUR_SCRIPT_URL?type=${detectedType}`;
-    const response = await fetch(API_URL);
-    const vendors = await response.json();
+<div id="app">
+    <h2 style="margin-top:0; color:#2c3e50; border-bottom:2px solid #007bff; padding-bottom:10px;">Control Desk</h2>
+    <p style="color:#6c757d;">Paste your material or part specifications below:</p>
+    <textarea id="partInput" placeholder="Ex: G4 Filter 490x490x94mm..."></textarea>
+    <button onclick="generateResult()">GENERATE POP-UP RESULT</button>
+</div>
 
-    // 3. Display results in your "Separate Window"
-    if (vendors.length === 0) {
-        resultsDiv.innerHTML = "❌ No verified suppliers found for this category.";
-    } else {
-        let html = "<table><tr><th>Supplier</th><th>Credibility</th></tr>";
-        vendors.forEach(v => {
-            html += `<tr><td><b>${v.name}</b></td><td>${v.credibility}</td></tr>`;
-        });
-        resultsDiv.innerHTML = html + "</table>";
+<div id="resultOverlay">
+    <div class="popup-content">
+        <div class="close-btn" onclick="document.getElementById('resultOverlay').style.display='none'">CLOSE</div>
+        <h3 style="margin-top:0; color:#2c3e50;">Verified Sourcing Results</h3>
+        <hr>
+        <div id="resultsTable"></div>
+    </div>
+</div>
+
+<script>
+    // Set your master password here
+    const SECRET = "Doha2026!@"; 
+
+    function validate() {
+        const userPass = document.getElementById('passkey').value;
+        if (userPass === SECRET) {
+            document.getElementById('loginLayer').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            document.body.style.background = "#f0f2f5"; 
+        } else {
+            alert("Incorrect Key. Access Denied.");
+        }
     }
-    document.getElementById('resultOverlay').style.display = 'block';
-}
+
+    async function generateResult() {
+        const input = document.getElementById('partInput').value.toLowerCase();
+        const resultsDiv = document.getElementById('resultsTable');
+        
+        let detectedType = "General";
+        if (input.includes("filter")) detectedType = "Filters";
+        if (input.includes("motor")) detectedType = "Motors";
+        if (input.includes("contactor")) detectedType = "Electrical";
+
+        resultsDiv.innerHTML = `<p style="color:#6c757d;">⏳ Running credibility filter for category: <b>${detectedType}</b>...</p>`;
+        document.getElementById('resultOverlay').style.display = 'block';
+
+        // Simulated Database Response (Replace with your Google Sheet script URL later)
+        await new Promise(resolve => setTimeout(resolve, 1200));
+
+        // Sample data to verify layout works flawlessly
+        let html = `
+            <p><b>Query Specs matched:</b> ${detectedType}</p>
+            <table>
+                <tr><th>Supplier Source</th><th>Credibility Status</th><th>Action</th></tr>
+                <tr><td><b>Verified Vendor Alpha</b></td><td><span style="color:green;">💎 Tier 1 OEM</span></td><td><button style="padding:5px 10px; margin:0; font-size:12px;">Pulse</button></td></tr>
+                <tr><td><b>Verified Vendor Beta</b></td><td><span style="color:green;">✅ Vetted Stockist</span></td><td><button style="padding:5px 10px; margin:0; font-size:12px;">Pulse</button></td></tr>
+                <tr><td><b>Verified Vendor Gamma</b></td><td><span style="color:green;">✅ Approved International</span></td><td><button style="padding:5px 10px; margin:0; font-size:12px;">Pulse</button></td></tr>
+            </table>
+        `;
+        resultsDiv.innerHTML = html;
+    }
+</script>
+
+</body>
+</html>
